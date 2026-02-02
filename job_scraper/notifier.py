@@ -6,7 +6,7 @@ from .logger import get_logger
 
 logger = get_logger(__name__)
 
-def send_email(config, subject: str, body: str):
+def send_email(config, subject: str, body: str) -> bool:
     recipients: Union[str, List[str]] = config["email"]["to"]
     if isinstance(recipients, str):
         recipients = [recipients]  # normalize
@@ -23,5 +23,7 @@ def send_email(config, subject: str, body: str):
             server.login(config["email"]["username"], config["email"]["password"])
             server.send_message(msg)
         logger.info(f"Email sent successfully to {recipients}")
+        return True
     except Exception as e:
         logger.error(f"Failed to send email: {e}", exc_info=True)
+        return False

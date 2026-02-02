@@ -1,41 +1,20 @@
 import json
 from pathlib import Path
+from .logger import get_logger
+
+logger = get_logger(__name__)
 
 SEEN_FILE = Path("seen_jobs.json")
 
-def load_seen() -> dict[str, list[str]]:
+def load_seen_jobs() -> set:
     if SEEN_FILE.exists():
-        with open(SEEN_FILE, "r") as f:
-            return json.load(f)
-    return {}
+        seen = set(json.loads(SEEN_FILE.read_text()))
+        logger.info(f"Loaded {len(seen)} previously seen jobs")
+        return seen
+    else:
+        logger.info("No seen_jobs.json found, starting fresh")
+        return set()
 
-
-def save_seen(seen: dict[str, list[str]]):
-    with open(SEEN_FILE, "w") as f:
-        json.dump(seen, f, indent=2)
-
-
-def filter_new_jobs(all_jobs: dict[str, list[dict]]) -> dict[str, list[dict]]:
-    seen = load_seen()
-    new_jobs = {}
-
-    for site, jobs in all_jobs.items():
-        site_seen = set(seen.get(site, []))
-
-        # choose a unique key (pdf or link or title+deadline)
-        fresh = [
-            job for job in jobs
-            if (job.get("link")) not in site_seen
-        ]
-
-        if fresh:
-            new_jobs[site] = fresh
-            # update seen
-            for job in fresh:
-                site_seen.add(job.get("pdf") or job.get("link"))
-            seen[site] = list(site_seen)
-
-    if new_jobs:
-        save_seen(seen)
-
-    return new_jobs
+def save_seen_jobs(seen: set):
+    SEEN_FILE.write_text(json.dumps(list(seen), indent=2))
+    logger.info(f"Saved {len(seen)} seen jobs to {SEEN_FILE}")
