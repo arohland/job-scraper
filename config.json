@@ -2,11 +2,11 @@
   "sites": {
     "berchtesgaden": {
       "url": "https://www.nationalpark-berchtesgaden.de/service/karriere/stellen/index.htm",
-      "parser": "site_a"
+      "parser": "parser_bgd"
     },
     "bayerischer_wald": {
       "url": "https://www.nationalpark-bayerischer-wald.bayern.de/ueber_uns/jobs/stellenangebote/index.htm",
-      "parser": "site_b"
+      "parser": "parser_bwd"
     }
   },
   "email": {

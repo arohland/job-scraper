@@ -1,18 +1,31 @@
 import json
 from pathlib import Path
-from dotenv import dotenv_values
+from dotenv import load_dotenv
 from .logger import get_logger
 
 logger = get_logger(__name__)
 
-def load_config(config_file: str = "config.json", env_file: str = ".env") -> dict:
-    logger.info(f"Loading config from {config_file} and {env_file}")
-    config = json.loads(Path(config_file).read_text())
+# project root = parent of job_watcher/
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
-    env_vars = dotenv_values(env_file)
-    if "EMAIL_USERNAME" in env_vars and "EMAIL_PASSWORD" in env_vars:
-        config["email"]["username"] = env_vars["EMAIL_USERNAME"]
-        config["email"]["password"] = env_vars["EMAIL_PASSWORD"]
-        logger.info("Loaded email credentials from .env")
+def load_config(filename: str = "config.json") -> dict:
+    load_dotenv(PROJECT_ROOT / ".env")
+
+    config_path = PROJECT_ROOT / filename
+    logger.info(f"Loading config from {config_path}")
+
+    if not config_path.exists():
+        raise FileNotFoundError(f"Config file not found: {config_path}")
+
+    with open(config_path, "r") as f:
+        config = json.load(f)
+
+    # inject secrets from env
+    config["email"]["username"] = config["email"].get(
+        "username"
+    ) or __import__("os").getenv("EMAIL_USERNAME")
+    config["email"]["password"] = config["email"].get(
+        "password"
+    ) or __import__("os").getenv("EMAIL_PASSWORD")
 
     return config
