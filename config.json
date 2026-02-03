@@ -7,11 +7,15 @@
     "bayerischer_wald": {
       "url": "https://www.nationalpark-bayerischer-wald.bayern.de/ueber_uns/jobs/stellenangebote/index.htm",
       "parser": "parser_bwd"
+    },
+    "hohe_tauern": {
+      "url": "https://hohetauern.at/de/jobs?format=html",
+      "parser": "parser_ht"
     }
   },
   "email": {
     "from": "andreas.rohland@posteo.de",
-    "to": "andreas.rohland@posteo.de",
+    "to": ["andreas.rohland@posteo.de", "alexandra.maria.duma@gmail.com"],
     "smtp_server": "posteo.de",
     "smtp_port": 587,
     "username": "",

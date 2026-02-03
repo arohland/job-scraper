@@ -2,7 +2,7 @@ from job_scraper.config import load_config
 from job_scraper.scraper import fetch_page, parse_jobs
 from job_scraper.storage import load_seen_jobs, save_seen_jobs
 from job_scraper.notifier import send_email
-from job_scraper.parsers import parser_bgd, parser_bwd
+from job_scraper.parsers import parser_bgd, parser_bwd, parser_ht
 from job_scraper.logger import get_logger
 
 logger = get_logger(__name__)
@@ -10,6 +10,7 @@ logger = get_logger(__name__)
 PARSERS = {
     "parser_bgd": parser_bgd,
     "parser_bwd": parser_bwd,
+    "parser_ht": parser_ht,
 }
 
 def main():
