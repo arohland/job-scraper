@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 from dotenv import load_dotenv
 from .logger import get_logger
@@ -21,11 +22,9 @@ def load_config(filename: str = "config.json") -> dict:
         config = json.load(f)
 
     # inject secrets from env
-    config["email"]["username"] = config["email"].get(
-        "username"
-    ) or __import__("os").getenv("EMAIL_USERNAME")
-    config["email"]["password"] = config["email"].get(
-        "password"
-    ) or __import__("os").getenv("EMAIL_PASSWORD")
+    config["email"]["username"] = config["email"].get("username") or os.getenv("EMAIL_USERNAME")
+    config["email"]["password"] = config["email"].get("password") or os.getenv("EMAIL_PASSWORD")
+    # for Gmail, from address equals the username
+    config["email"]["from"] = config["email"].get("from") or config["email"]["username"]
 
     return config
