@@ -11,7 +11,15 @@
     "hohe_tauern": {
       "url": "https://hohetauern.at/de/jobs?format=html",
       "parser": "parser_ht"
-    }
+    },
+    "gesaeuse": {
+      "url": "https://nationalpark-gesaeuse.at/nationalpark-mitgestalten/stellenausschreibung/",
+      "parser": "parser_gesaeuse"
+    },
+    "kalkalpen": {
+      "url": "https://www.kalkalpen.at/jobs-mitarbeit",
+      "parser": "parser_kalkalpen"
+    },
   },
   "llm": {
     "model": "claude-haiku-4-5-20251001",
