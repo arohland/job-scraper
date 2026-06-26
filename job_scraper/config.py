@@ -27,4 +27,7 @@ def load_config(filename: str = "config.json") -> dict:
     # for Gmail, from address equals the username
     config["email"]["from"] = config["email"].get("from") or config["email"]["username"]
 
+    config.setdefault("llm", {})
+    config["llm"]["api_key"] = config["llm"].get("api_key") or os.getenv("ANTHROPIC_API_KEY")
+
     return config

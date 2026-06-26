@@ -6,15 +6,23 @@ logger = get_logger(__name__)
 
 SEEN_FILE = Path("seen_jobs.json")
 
-def load_seen_jobs() -> set:
-    if SEEN_FILE.exists():
-        seen = set(json.loads(SEEN_FILE.read_text()))
-        logger.info(f"Loaded {len(seen)} previously seen jobs")
-        return seen
-    else:
-        logger.info("No seen_jobs.json found, starting fresh")
-        return set()
 
-def save_seen_jobs(seen: set):
-    SEEN_FILE.write_text(json.dumps(list(seen), indent=2))
+def load_seen_jobs() -> dict:
+    if not SEEN_FILE.exists():
+        logger.info("No seen_jobs.json found, starting fresh")
+        return {}
+
+    data = json.loads(SEEN_FILE.read_text())
+
+    # migrate old format: list of titles -> dict
+    if isinstance(data, list):
+        logger.info(f"Migrating seen_jobs.json from list to dict format ({len(data)} entries)")
+        data = {title: {} for title in data}
+
+    logger.info(f"Loaded {len(data)} previously seen jobs")
+    return data
+
+
+def save_seen_jobs(seen: dict):
+    SEEN_FILE.write_text(json.dumps(seen, indent=2, ensure_ascii=False))
     logger.info(f"Saved {len(seen)} seen jobs to {SEEN_FILE}")
