@@ -55,14 +55,17 @@ def filter_jobs_by_relevance(jobs: list, config: dict) -> list:
                 if raw.startswith("json"):
                     raw = raw[4:]
             result = json.loads(raw.strip())
+            job["llm_relevant"] = result.get("relevant")
+            job["llm_reason"] = result.get("reason", "")
             if result.get("relevant"):
                 logger.info(f"Relevant: '{title}' — {result.get('reason')}")
-                job["relevance_reason"] = result.get("reason", "")
                 relevant.append(job)
             else:
                 logger.info(f"Filtered out: '{title}' — {result.get('reason')}")
         except Exception as e:
             logger.error(f"LLM filter failed for '{title}': {e} — including job to be safe")
+            job["llm_relevant"] = None
+            job["llm_reason"] = f"filter error: {e}"
             relevant.append(job)
 
     logger.info(f"Relevance filter: {len(relevant)}/{len(jobs)} jobs passed")

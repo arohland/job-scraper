@@ -42,7 +42,7 @@ def main():
             if job["title"] not in seen_jobs:
                 logger.info(f"New job found: {job['title']} ({job['link']})")
                 new_jobs.append(job)
-                seen_jobs.add(job["title"])
+                seen_jobs[job["title"]] = job
             else:
                 logger.debug(f"Already seen job: {job['title']} ({job['link']})")
 
@@ -56,8 +56,8 @@ def main():
             line = f"{job['site']} – {job['title']}\n{job['link']}"
             if job.get("deadline"):
                 line += f"\nDeadline: {job['deadline']}"
-            if job.get("relevance_reason"):
-                line += f"\nWhy relevant: {job['relevance_reason']}"
+            if job.get("llm_reason"):
+                line += f"\nWhy relevant: {job['llm_reason']}"
             lines.append(line)
         body = "\n\n".join(lines)
         logger.info(f"Sending email with {len(new_jobs)} relevant jobs")
