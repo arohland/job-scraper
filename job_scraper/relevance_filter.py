@@ -49,7 +49,12 @@ def filter_jobs_by_relevance(jobs: list, config: dict) -> list:
                 system=SYSTEM_PROMPT,
                 messages=[{"role": "user", "content": text}],
             )
-            result = json.loads(message.content[0].text)
+            raw = message.content[0].text.strip()
+            if raw.startswith("```"):
+                raw = raw.split("```", 2)[1]
+                if raw.startswith("json"):
+                    raw = raw[4:]
+            result = json.loads(raw.strip())
             if result.get("relevant"):
                 logger.info(f"Relevant: '{title}' — {result.get('reason')}")
                 job["relevance_reason"] = result.get("reason", "")
