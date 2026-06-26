@@ -20,14 +20,6 @@
       "url": "https://www.kalkalpen.at/jobs-mitarbeit",
       "parser": "parser_kalkalpen"
     },
-    "bfw": {
-      "url": "https://www.bfw.gv.at/karriere/",
-      "parser": "parser_bfw"
-    },
-    "wwf": {
-      "url": "https://www.wwf.at/jobs",
-      "parser": "parser_wwf"
-    }
   },
   "llm": {
     "model": "claude-haiku-4-5-20251001",
