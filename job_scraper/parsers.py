@@ -107,33 +107,39 @@ def parser_gesaeuse(soup: BeautifulSoup, site_key: str, base_url: str) -> list[d
     return jobs
 
 
+_KALKALPEN_NOISE = {"Cookie Information", "Cookie-Einstellungen", "Datenschutz"}
+
 def parser_kalkalpen(soup: BeautifulSoup, site_key: str, base_url: str) -> list[dict]:
     # Kalkalpen uses h3 headings for position titles with deadline in a following <p>.
     # Links are sometimes javascript:void(0), so fall back to the page URL.
+    # Noise entries (form labels, cookie banners) are excluded by requiring a
+    # following descriptive paragraph before the next heading.
     jobs = []
     for h3 in soup.find_all("h3"):
         title = h3.get_text(strip=True)
-        if not title:
+        if not title or title.endswith(":") or title in _KALKALPEN_NOISE:
             continue
 
-        # find a real link nearby (skip javascript: hrefs)
-        link = base_url
-        a = h3.find("a", href=lambda x: x and not x.startswith("javascript"))
-        if a:
-            link = urljoin(base_url, a["href"])
-        else:
-            a = h3.find_next("a", href=lambda x: x and not x.startswith("javascript"))
-            if a:
-                link = urljoin(base_url, a["href"])
-
+        # require at least one descriptive paragraph after the heading
+        has_description = False
         deadline = None
         for sibling in h3.find_next_siblings(["p", "h3", "h2"]):
             if sibling.name in ("h3", "h2"):
                 break
             text = sibling.get_text(strip=True)
+            if len(text) > 30:
+                has_description = True
             if "Bewerbung" in text or "einlangend" in text:
                 deadline = text
-                break
+
+        if not has_description:
+            continue
+
+        link = base_url
+        a = h3.find_next("a", href=lambda x: x and not x.startswith("javascript"))
+        next_h3 = h3.find_next("h3")
+        if a and (next_h3 is None or a.find_previous("h3") == h3):
+            link = urljoin(base_url, a["href"])
 
         jobs.append({
             "site": site_key,
@@ -145,41 +151,47 @@ def parser_kalkalpen(soup: BeautifulSoup, site_key: str, base_url: str) -> list[
 
 
 def parser_bfw(soup: BeautifulSoup, site_key: str, base_url: str) -> list[dict]:
-    # BFW uses div.job-entry > h3 (title) + p (location) + a[href*=pdf] (link).
+    # BFW job listings are injected by JavaScript — requests fetches the page
+    # skeleton only, so PDF links are not present in the static HTML.
+    # Kept here as a placeholder; needs Playwright to work properly.
+    # Find all PDF links in the main content and use the nearest preceding h3.
     jobs = []
-    for entry in soup.select("div.job-entry"):
-        h3 = entry.find("h3")
+    seen_links = set()
+    for a in soup.find_all("a", href=lambda x: x and ".pdf" in x):
+        href = urljoin(base_url, a["href"])
+        if href in seen_links:
+            continue
+        seen_links.add(href)
+        h3 = a.find_previous("h3")
         if not h3:
             continue
-        a = entry.find("a", href=lambda x: x and ".pdf" in x)
-        if not a:
-            continue
-        location = entry.find("p")
         title = h3.get_text(strip=True)
-        if location:
-            title = f"{title} ({location.get_text(strip=True)})"
+        location_el = h3.find_next_sibling("p")
+        if location_el:
+            title = f"{title} ({location_el.get_text(strip=True)})"
         jobs.append({
             "site": site_key,
             "title": title,
-            "link": urljoin(base_url, a["href"]),
+            "link": href,
         })
     return jobs
 
 
 def parser_wwf(soup: BeautifulSoup, site_key: str, base_url: str) -> list[dict]:
-    # WWF Austria lists jobs as <a href="..."><h3>Title</h3></a> blocks
-    # within a "freie Stellen" section.
+    # WWF Austria job cards are <a href="/artikel/..."> elements containing an h3.
+    # Job cards are loaded client-side; this only works when listings happen to be
+    # in the static HTML. Needs Playwright for reliable results.
     jobs = []
-    for a in soup.select("a:has(h3)"):
-        href = a.get("href", "")
-        if not href or href.startswith("javascript"):
+    for a in soup.find_all("a", href=lambda x: x and "/artikel/" in x):
+        h3 = a.find("h3")
+        if not h3:
             continue
-        title = a.find("h3").get_text(strip=True)
+        title = h3.get_text(strip=True)
         if not title:
             continue
         jobs.append({
             "site": site_key,
             "title": title,
-            "link": urljoin(base_url, href),
+            "link": urljoin(base_url, a["href"]),
         })
     return jobs
