@@ -12,7 +12,7 @@ def load_seen_jobs() -> dict:
         logger.info("No seen_jobs.json found, starting fresh")
         return {}
 
-    data = json.loads(SEEN_FILE.read_text())
+    data = json.loads(SEEN_FILE.read_text(encoding="utf-8"))
 
     # migrate old format: list of titles -> dict
     if isinstance(data, list):
@@ -24,5 +24,5 @@ def load_seen_jobs() -> dict:
 
 
 def save_seen_jobs(seen: dict):
-    SEEN_FILE.write_text(json.dumps(seen, indent=2, ensure_ascii=False))
+    SEEN_FILE.write_text(json.dumps(seen, indent=2, ensure_ascii=False), encoding="utf-8")
     logger.info(f"Saved {len(seen)} seen jobs to {SEEN_FILE}")
