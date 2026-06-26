@@ -1,0 +1,64 @@
+import json
+import os
+import anthropic
+from .logger import get_logger
+
+logger = get_logger(__name__)
+
+SYSTEM_PROMPT = """You are a job relevance classifier. You will be given a job posting and must decide
+whether it is relevant for a specific candidate.
+
+Candidate profile:
+- Education: Master of Science in wildlife ecology / wildlife management + Diploma as veterinarian
+- Target role: Professional position (no internships, no student jobs, no volunteer positions)
+- Field: Wildlife ecology, wildlife management, conservation biology, wildlife veterinary medicine,
+  nature conservation, environmental science, national park management
+- Location preference: Salzburg region (Austria) and neighboring areas (Bavaria, Tyrol, Carinthia, Styria)
+- Not relevant: maintenance/facility staff, administrative/office-only roles, tourism guides,
+  IT roles, cooking/hospitality, cleaning, construction, purely agricultural roles
+
+Respond with exactly this JSON format, nothing else:
+{"relevant": true, "reason": "one short sentence"}
+or
+{"relevant": false, "reason": "one short sentence"}"""
+
+
+def filter_jobs_by_relevance(jobs: list, config: dict) -> list:
+    """Return only jobs the LLM judges relevant for the candidate profile."""
+    api_key = config.get("llm", {}).get("api_key") or os.getenv("ANTHROPIC_API_KEY")
+    model = config.get("llm", {}).get("model", "claude-haiku-4-5-20251001")
+
+    if not api_key:
+        logger.warning("No ANTHROPIC_API_KEY found — skipping relevance filter, sending all jobs")
+        return jobs
+
+    client = anthropic.Anthropic(api_key=api_key)
+    relevant = []
+
+    for job in jobs:
+        title = job.get("title", "")
+        description = job.get("description", "")
+        text = f"Title: {title}"
+        if description:
+            text += f"\nDescription: {description[:1000]}"
+
+        try:
+            message = client.messages.create(
+                model=model,
+                max_tokens=100,
+                system=SYSTEM_PROMPT,
+                messages=[{"role": "user", "content": text}],
+            )
+            result = json.loads(message.content[0].text)
+            if result.get("relevant"):
+                logger.info(f"Relevant: '{title}' — {result.get('reason')}")
+                job["relevance_reason"] = result.get("reason", "")
+                relevant.append(job)
+            else:
+                logger.info(f"Filtered out: '{title}' — {result.get('reason')}")
+        except Exception as e:
+            logger.error(f"LLM filter failed for '{title}': {e} — including job to be safe")
+            relevant.append(job)
+
+    logger.info(f"Relevance filter: {len(relevant)}/{len(jobs)} jobs passed")
+    return relevant
