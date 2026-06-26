@@ -2,7 +2,7 @@ from job_scraper.config import load_config
 from job_scraper.scraper import fetch_page, parse_jobs
 from job_scraper.storage import load_seen_jobs, save_seen_jobs
 from job_scraper.notifier import send_email
-from job_scraper.parsers import parser_bgd, parser_bwd, parser_ht
+from job_scraper.parsers import parser_bgd, parser_bwd, parser_ht, parser_gesaeuse, parser_kalkalpen, parser_bfw, parser_wwf
 from job_scraper.relevance_filter import filter_jobs_by_relevance
 from job_scraper.logger import get_logger
 
@@ -12,6 +12,10 @@ PARSERS = {
     "parser_bgd": parser_bgd,
     "parser_bwd": parser_bwd,
     "parser_ht": parser_ht,
+    "parser_gesaeuse": parser_gesaeuse,
+    "parser_kalkalpen": parser_kalkalpen,
+    "parser_bfw": parser_bfw,
+    "parser_wwf": parser_wwf,
 }
 
 def main():
