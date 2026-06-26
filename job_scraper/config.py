@@ -24,6 +24,8 @@ def load_config(filename: str = "config.json") -> dict:
     # inject secrets from env
     config["email"]["username"] = config["email"].get("username") or os.getenv("EMAIL_USERNAME")
     config["email"]["password"] = config["email"].get("password") or os.getenv("EMAIL_PASSWORD")
+    # for Gmail, from address equals the username
+    config["email"]["from"] = config["email"].get("from") or config["email"]["username"]
 
     config.setdefault("llm", {})
     config["llm"]["api_key"] = config["llm"].get("api_key") or os.getenv("ANTHROPIC_API_KEY")

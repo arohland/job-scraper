@@ -18,9 +18,9 @@
     "api_key": ""
   },
   "email": {
-    "from": "andreas.rohland@posteo.de",
+    "from": "",
     "to": ["andreas.rohland@posteo.de", "alexandra.maria.duma@gmail.com"],
-    "smtp_server": "posteo.de",
+    "smtp_server": "smtp.gmail.com",
     "smtp_port": 587,
     "username": "",
     "password": ""
