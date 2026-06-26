@@ -2,6 +2,7 @@ import json
 import os
 import anthropic
 from .logger import get_logger
+from .models import Job
 
 logger = get_logger(__name__)
 
@@ -23,7 +24,7 @@ or
 {"relevant": false, "reason": "one short sentence"}"""
 
 
-def filter_jobs_by_relevance(jobs: list, config: dict) -> list:
+def filter_jobs_by_relevance(jobs: list[Job], config: dict) -> list[Job]:
     """Return only jobs the LLM judges relevant for the candidate profile."""
     api_key = config.get("llm", {}).get("api_key") or os.getenv("ANTHROPIC_API_KEY")
     model = config.get("llm", {}).get("model", "claude-haiku-4-5-20251001")
@@ -36,11 +37,9 @@ def filter_jobs_by_relevance(jobs: list, config: dict) -> list:
     relevant = []
 
     for job in jobs:
-        title = job.get("title", "")
-        description = job.get("description", "")
-        text = f"Title: {title}"
-        if description:
-            text += f"\nDescription: {description[:1000]}"
+        text = f"Title: {job.title}"
+        if job.description:
+            text += f"\nDescription: {job.description[:1000]}"
 
         try:
             message = client.messages.create(
@@ -55,17 +54,17 @@ def filter_jobs_by_relevance(jobs: list, config: dict) -> list:
                 if raw.startswith("json"):
                     raw = raw[4:]
             result = json.loads(raw.strip())
-            job["llm_relevant"] = result.get("relevant")
-            job["llm_reason"] = result.get("reason", "")
-            if result.get("relevant"):
-                logger.info(f"Relevant: '{title}' — {result.get('reason')}")
+            job.llm_relevant = result.get("relevant")
+            job.llm_reason = result.get("reason", "")
+            if job.llm_relevant:
+                logger.info(f"Relevant: '{job.title}' — {job.llm_reason}")
                 relevant.append(job)
             else:
-                logger.info(f"Filtered out: '{title}' — {result.get('reason')}")
+                logger.info(f"Filtered out: '{job.title}' — {job.llm_reason}")
         except Exception as e:
-            logger.error(f"LLM filter failed for '{title}': {e} — including job to be safe")
-            job["llm_relevant"] = None
-            job["llm_reason"] = f"filter error: {e}"
+            logger.error(f"LLM filter failed for '{job.title}': {e} — including job to be safe")
+            job.llm_relevant = None
+            job.llm_reason = f"filter error: {e}"
             relevant.append(job)
 
     logger.info(f"Relevance filter: {len(relevant)}/{len(jobs)} jobs passed")
