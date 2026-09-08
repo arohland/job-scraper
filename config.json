@@ -19,7 +19,7 @@
     "kalkalpen": {
       "url": "https://www.kalkalpen.at/jobs-mitarbeit",
       "parser": "parser_kalkalpen"
-    },
+    }
   },
   "llm": {
     "model": "claude-haiku-4-5-20251001",
